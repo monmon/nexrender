@@ -3,6 +3,9 @@
 const path      = require('path');
 const fs        = require('fs-extra');
 const async     = require('async');
+const DOMParser = require('xmldom').DOMParser;
+const TheSerializer = require('xmldom').XMLSerializer;
+const fulldom = require('xmldom');
 
 function getAllExpressions(data) {
     return data.match(/\<expr bdata=\"([a-f0-9]+)\"\s*\/\>/gi);
@@ -36,32 +39,29 @@ function processTemplateFile(project, callback) {
 
         // convert to utf8 string
         let data = bin.toString('utf8');
+        // create xml
+        const xmlDoc = new DOMParser().parseFromString(data);
+        // search all scripts
+        const stringElements = xmlDoc.getElementsByTagName("string");
+        // process in xml way
 
-        // check for valid project template
-        if (data.indexOf('<?xml') !== 0) return callback(new Error('Project is not valid xml project template'));
+        const mark = "//nex";
+        for (let key = 0; key < stringElements.length; key++) {
+            const elm = stringElements[key];
+            const original = elm.textContent;
 
-        // search for expressions
-        let expressions = getAllExpressions(data);
+            if (!~original.indexOf(mark)) {
+                continue;
+            }
 
-        // check for existing expressions
-        if (expressions !== null) {
-
-            // then iterate over them
-            for (let expr of expressions) {
-
-                // extract hex from xml tag and decode it
-                let hex = expr.split('"')[1];
-                let dec = new Buffer(hex, 'hex').toString('utf8');
-    
-                // do patch and encode back to hex
-                // using regex file path pattern
-                let enc = new Buffer( replacePath( dec, replaceToPath ) ).toString('hex');
-    
-                // replace patched hex
-                data = data.replace( hex, enc );
+            elm.textContent = replacePath(original.replace(mark, ''), replaceToPath);
+            if (elm.textContent !== original) {
+                console.info(`[${project.uid}] changed...`, elm.textContent,original);
             }
         }
-        
+
+        data = new TheSerializer().serializeToString(xmlDoc);
+
         // save result
         fs.writeFile(projectName, data, callback);
     });

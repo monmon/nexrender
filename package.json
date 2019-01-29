@@ -21,6 +21,7 @@
   "license": "MIT",
   "dependencies": {
     "async": "^2.0.0-rc.6",
+    "aws-sdk": "^2.157.0",
     "body-parser": "^1.15.0",
     "cli": "^1.0.0",
     "download": "^6.1.0",
@@ -34,7 +35,7 @@
     "node-dir": "^0.1.11",
     "request": "^2.69.0",
     "shortid": "^2.2.4",
-    "aws-sdk": "^2.157.0"
+    "xmldom": "^0.1.27"
   },
   "devDependencies": {
     "chai": "^3.5.0",
